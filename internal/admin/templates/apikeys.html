@@ -1,0 +1,34 @@
+{{define "content"}}
+<div class="page-header">
+    <h1>API keys</h1>
+    <a href="/admin/keys/new" class="primary">New key</a>
+</div>
+
+{{if .Keys}}
+<table>
+    <thead>
+        <tr><th>Name</th><th>Prefix</th><th>From</th><th>Recipients</th><th>Limits</th><th>Status</th><th></th></tr>
+    </thead>
+    <tbody>
+    {{range .Keys}}
+        <tr>
+            <td><a href="/admin/keys/{{.ID}}">{{.Name}}</a></td>
+            <td><code>{{.KeyPrefix}}…</code></td>
+            <td>{{.FromAddress}}</td>
+            <td>{{len .ToAddresses}} to{{if .CcAddresses}}, {{len .CcAddresses}} cc{{end}}{{if .BccAddresses}}, {{len .BccAddresses}} bcc{{end}}</td>
+            <td class="muted">
+                {{if .RatePerMinute}}{{.RatePerMinute}}/min · {{end}}
+                {{if .RatePerHour}}{{.RatePerHour}}/hr · {{end}}
+                {{if .RatePerDay}}{{.RatePerDay}}/day{{end}}
+                {{if and (not .RatePerMinute) (not .RatePerHour) (not .RatePerDay)}}unlimited{{end}}
+            </td>
+            <td>{{if .Disabled}}<span class="status status-failed">disabled</span>{{else}}<span class="status status-sent">active</span>{{end}}</td>
+            <td><a href="/admin/keys/{{.ID}}">Edit</a></td>
+        </tr>
+    {{end}}
+    </tbody>
+</table>
+{{else}}
+<p class="muted">No keys yet. <a href="/admin/keys/new">Create one</a> to start sending.</p>
+{{end}}
+{{end}}

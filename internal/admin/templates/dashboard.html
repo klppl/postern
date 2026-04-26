@@ -1,0 +1,52 @@
+{{define "content"}}
+<h1>Last 24 hours</h1>
+<section class="cards">
+    <div class="card"><div class="num">{{.Counts.Sent}}</div><div class="lbl">Sent</div></div>
+    <div class="card"><div class="num">{{.Counts.Pending}}</div><div class="lbl">Pending</div></div>
+    <div class="card"><div class="num">{{.Counts.Failed}}</div><div class="lbl">Retrying</div></div>
+    <div class="card"><div class="num">{{.Counts.Dead}}</div><div class="lbl">Dead</div></div>
+</section>
+
+{{if .Volume}}
+<section>
+    <h2>Volume by hour</h2>
+    <div class="bars">
+        {{range .Volume}}
+            <div class="bar-wrap" title="{{.Hour.Format "2006-01-02 15:00"}} · sent {{.Sent}} / failed {{.Failed}}">
+                {{$total := add .Sent .Failed}}
+                <div class="bar" style="height: {{if $.MaxVolume}}{{div_ratio $total $.MaxVolume}}{{else}}0{{end}}%"></div>
+                <div class="bar-label">{{.Hour.Format "15"}}</div>
+            </div>
+        {{end}}
+    </div>
+</section>
+{{end}}
+
+<section>
+    <h2>Recent messages</h2>
+    {{if .Recent}}
+    <table>
+        <thead>
+            <tr><th>When</th><th>Status</th><th>To</th><th>Subject</th></tr>
+        </thead>
+        <tbody>
+        {{range .Recent}}
+            <tr>
+                <td><a href="/admin/messages/{{.ID}}">{{.CreatedAt.Format "Jan 2 15:04"}}</a></td>
+                <td><span class="status status-{{.Status}}">{{.Status}}</span></td>
+                <td>{{range $i, $r := .ToAddresses}}{{if $i}}, {{end}}{{$r}}{{end}}</td>
+                <td>{{.Subject}}</td>
+            </tr>
+        {{end}}
+        </tbody>
+    </table>
+    {{else}}
+    <p class="muted">No messages yet.</p>
+    <ol class="getting-started">
+        <li>Configure your <a href="/admin/smtp">SMTP relay</a> (host, credentials, TLS).</li>
+        <li>Create an <a href="/admin/keys/new">API key</a> with the recipients you want to send to.</li>
+        <li>See <a href="/admin/sending">Sending</a> for curl, Go, Node, and Python snippets.</li>
+    </ol>
+    {{end}}
+</section>
+{{end}}

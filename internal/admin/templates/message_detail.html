@@ -1,0 +1,49 @@
+{{define "content"}}
+<p><a href="/admin/messages">← Messages</a></p>
+<h1>{{.Message.Subject}}</h1>
+<dl class="meta">
+    <dt>Status</dt><dd><span class="status status-{{.Message.Status}}">{{.Message.Status}}</span></dd>
+    <dt>Message ID</dt><dd><code>{{.Message.MessageID}}</code></dd>
+    <dt>Created</dt><dd>{{.Message.CreatedAt.Format "2006-01-02 15:04:05 MST"}}</dd>
+    {{if not .Message.SentAt.IsZero}}<dt>Sent</dt><dd>{{.Message.SentAt.Format "2006-01-02 15:04:05 MST"}}</dd>{{end}}
+    <dt>Attempts</dt><dd>{{.Message.Attempts}}</dd>
+    <dt>API key</dt><dd>{{if .APIKey}}{{.APIKey.Name}}{{else}}<em>deleted</em>{{end}}</dd>
+    <dt>From</dt><dd>{{if .Message.FromName}}{{.Message.FromName}} &lt;{{.Message.FromAddress}}&gt;{{else}}{{.Message.FromAddress}}{{end}}</dd>
+    <dt>To</dt><dd>{{join ", " .Message.ToAddresses}}</dd>
+    {{if .Message.CcAddresses}}<dt>Cc</dt><dd>{{join ", " .Message.CcAddresses}}</dd>{{end}}
+    {{if .Message.BccAddresses}}<dt>Bcc</dt><dd>{{join ", " .Message.BccAddresses}}</dd>{{end}}
+    {{if .Message.SMTPResponse}}<dt>SMTP response</dt><dd><code>{{.Message.SMTPResponse}}</code></dd>{{end}}
+    {{if .Message.LastError}}<dt>Last error</dt><dd class="err">{{.Message.LastError}}</dd>{{end}}
+</dl>
+
+{{if .Message.BodyText}}
+<h2>Body (text)</h2>
+<pre class="body">{{.Message.BodyText}}</pre>
+{{end}}
+
+{{if .Message.BodyHTML}}
+<h2>Body (HTML)</h2>
+<details>
+    <summary>Source</summary>
+    <pre class="body">{{.Message.BodyHTML}}</pre>
+</details>
+<iframe class="html-preview" sandbox="" srcdoc="{{.Message.BodyHTML}}"></iframe>
+{{end}}
+
+{{if .Attempts}}
+<h2>Attempt history</h2>
+<table>
+    <thead><tr><th>#</th><th>When</th><th>SMTP response</th><th>Error</th></tr></thead>
+    <tbody>
+    {{range .Attempts}}
+        <tr>
+            <td>{{.AttemptNo}}</td>
+            <td>{{.AttemptedAt.Format "2006-01-02 15:04:05"}}</td>
+            <td><code>{{.SMTPResponse}}</code></td>
+            <td>{{.Error}}</td>
+        </tr>
+    {{end}}
+    </tbody>
+</table>
+{{end}}
+{{end}}

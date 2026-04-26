@@ -1,0 +1,7 @@
+{{define "content"}}
+<div class="preview">
+    <p><strong>Subject:</strong> {{.Subject}}</p>
+    {{if .BodyText}}<h3>Text</h3><pre class="body">{{.BodyText}}</pre>{{end}}
+    {{if .BodyHTML}}<h3>HTML</h3><iframe class="html-preview" sandbox="" srcdoc="{{.BodyHTML}}"></iframe>{{end}}
+</div>
+{{end}}

@@ -1,0 +1,60 @@
+{{define "content"}}
+<h1>Messages</h1>
+<form method="get" class="filters">
+    <label>Key
+        <select name="api_key_id">
+            <option value="">All</option>
+            {{range .Keys}}
+                <option value="{{.ID}}" {{if eq .ID $.Filter.APIKeyID}}selected{{end}}>{{.Name}}</option>
+            {{end}}
+        </select>
+    </label>
+    <label>Status
+        <select name="status">
+            <option value="">Any</option>
+            {{range .Statuses}}
+                <option value="{{.}}" {{if eq . $.Filter.Status}}selected{{end}}>{{.}}</option>
+            {{end}}
+        </select>
+    </label>
+    <label>Recipient
+        <input type="text" name="recipient" value="{{.Filter.Recipient}}" placeholder="email@…">
+    </label>
+    <label>Since
+        <input type="date" name="since">
+    </label>
+    <label>Until
+        <input type="date" name="until">
+    </label>
+    <button type="submit" class="primary">Filter</button>
+    <a href="/admin/messages" class="muted">Reset</a>
+</form>
+
+<p class="muted">{{.Total}} total</p>
+
+{{if .Messages}}
+<table>
+    <thead>
+        <tr><th>When</th><th>Status</th><th>From</th><th>To</th><th>Subject</th><th>Attempts</th></tr>
+    </thead>
+    <tbody>
+    {{range .Messages}}
+        <tr>
+            <td><a href="/admin/messages/{{.ID}}">{{.CreatedAt.Format "Jan 2 15:04:05"}}</a></td>
+            <td><span class="status status-{{.Status}}">{{.Status}}</span></td>
+            <td>{{.FromAddress}}</td>
+            <td>{{join ", " .ToAddresses}}</td>
+            <td>{{.Subject}}</td>
+            <td>{{.Attempts}}</td>
+        </tr>
+    {{end}}
+    </tbody>
+</table>
+<nav class="pager">
+    {{if ge .PrevOffset 0}}<a href="?offset={{.PrevOffset}}">← Newer</a>{{end}}
+    {{if ge .NextOffset 0}}<a href="?offset={{.NextOffset}}">Older →</a>{{end}}
+</nav>
+{{else}}
+<p class="muted">No messages match.</p>
+{{end}}
+{{end}}

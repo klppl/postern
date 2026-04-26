@@ -1,0 +1,18 @@
+{{define "content"}}
+<div class="auth">
+    <h1>Bifrost</h1>
+    <p class="muted">Sign in to continue.</p>
+    {{if .Error}}<div class="flash flash-error">{{.Error}}</div>{{end}}
+    <form method="post" action="/admin/login">
+        <label>
+            Username
+            <input type="text" name="username" autocomplete="username" autofocus value="{{.Username}}">
+        </label>
+        <label>
+            Password
+            <input type="password" name="password" autocomplete="current-password">
+        </label>
+        <button type="submit" class="primary">Sign in</button>
+    </form>
+</div>
+{{end}}

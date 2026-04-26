@@ -1,0 +1,49 @@
+[Unit]
+Description=Bifrost email gateway
+Documentation=https://github.com/alexander/bifrost
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=bifrost
+Group=bifrost
+
+# Where the binary lives on the host. Adjust if you install elsewhere.
+ExecStart=/usr/local/bin/bifrost
+
+# Persistent state. systemd creates /var/lib/bifrost owned by the service user.
+StateDirectory=bifrost
+WorkingDirectory=/var/lib/bifrost
+
+# Required: 32-byte master key (hex or base64). KEEP THIS BACKED UP — losing
+# it means any encrypted SMTP password in the DB becomes unrecoverable.
+EnvironmentFile=/etc/bifrost/bifrost.env
+
+Environment=BIFROST_DB_PATH=/var/lib/bifrost/bifrost.db
+Environment=BIFROST_LISTEN_ADDR=127.0.0.1:8080
+
+Restart=on-failure
+RestartSec=5s
+
+# Hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictNamespaces=true
+LockPersonality=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+ReadWritePaths=/var/lib/bifrost
+CapabilityBoundingSet=
+AmbientCapabilities=
+
+[Install]
+WantedBy=multi-user.target

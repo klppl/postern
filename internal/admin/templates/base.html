@@ -1,0 +1,34 @@
+{{define "base.html"}}<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{.Title}} · Bifrost</title>
+    <link rel="stylesheet" href="/admin/static/style.css">
+    <script src="/admin/static/app.js" defer></script>
+</head>
+<body>
+{{if .AdminName}}
+<header class="topbar">
+    <div class="brand">Bifrost</div>
+    <nav>
+        <a href="/admin/" {{if eq .Active "dashboard"}}class="active"{{end}}>Dashboard</a>
+        <a href="/admin/messages" {{if eq .Active "messages"}}class="active"{{end}}>Messages</a>
+        <a href="/admin/keys" {{if eq .Active "keys"}}class="active"{{end}}>API keys</a>
+        <a href="/admin/templates" {{if eq .Active "templates"}}class="active"{{end}}>Templates</a>
+        <a href="/admin/sending" {{if eq .Active "sending"}}class="active"{{end}}>Sending</a>
+        <a href="/admin/smtp" {{if eq .Active "smtp"}}class="active"{{end}}>SMTP</a>
+        <a href="/admin/settings" {{if eq .Active "settings"}}class="active"{{end}}>Settings</a>
+    </nav>
+    <form method="post" action="/admin/logout" class="logout">
+        <span class="user">{{.AdminName}}</span>
+        <button type="submit" class="link">Sign out</button>
+    </form>
+</header>
+{{end}}
+<main class="container">
+    {{if .Flash}}<div class="flash flash-{{.FlashKind}}">{{.Flash}}</div>{{end}}
+    {{template "content" .Data}}
+</main>
+</body>
+</html>{{end}}

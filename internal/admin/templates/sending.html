@@ -1,0 +1,161 @@
+{{define "content"}}
+<h1>Sending email from your application</h1>
+
+<p class="muted">
+    Replace <code>bf_YOUR_KEY_HERE</code> in every snippet below with the raw
+    API key. The raw key is shown once when you create or rotate a key on
+    the <a href="/admin/keys">API keys</a> page — copy it then.
+    Recipients and the From address are configured per-key, not per-request.
+</p>
+
+<section>
+    <h2>Endpoint</h2>
+    <pre class="body">POST {{.BaseURL}}/api/v1/send
+Authorization: Bearer bf_YOUR_KEY_HERE
+Content-Type: application/json</pre>
+</section>
+
+<section>
+    <h2>Request body</h2>
+    <p>Two shapes are accepted. <strong>Inline content</strong>:</p>
+    <pre class="body">{
+  "subject": "Welcome",
+  "body": "Hi there.",
+  "body_html": "&lt;p&gt;Hi there.&lt;/p&gt;"
+}</pre>
+    <p>Or a <strong>template reference</strong>:</p>
+    <pre class="body">{
+  "template_name": "welcome",
+  "variables": { "name": "Alex" }
+}</pre>
+    <p class="muted">
+        With a template, the subject and bodies come from the stored
+        template and variables are substituted via <code>{{"{{variable}}"}}</code>
+        Handlebars syntax. Pass <code>"subject": "..."</code> alongside
+        a template to override the subject for one send.
+    </p>
+</section>
+
+<section>
+    <h2>Recipients</h2>
+    <p>
+        By default each API key carries its own fixed <code>to</code>, <code>cc</code>,
+        and <code>bcc</code> list — those are used for every send and the
+        request body cannot change them. This is the safest default: a leaked
+        key cannot be used to email arbitrary addresses.
+    </p>
+    <p>
+        If a key has <strong>"Allow the API request to override recipients"</strong>
+        enabled, you can pass <code>to</code>, <code>cc</code>, and/or <code>bcc</code>
+        in the body to send to different addresses for that one call:
+    </p>
+    <pre class="body">{
+  "subject": "Your invoice",
+  "body": "See attached.",
+  "to":  ["customer@example.com"],
+  "cc":  ["billing@example.com"],
+  "bcc": []
+}</pre>
+    <ul>
+        <li>If you supply any of <code>to</code>/<code>cc</code>/<code>bcc</code>, you take over <strong>all three</strong> for that send — there is no field-level merge.</li>
+        <li>If you supply none, the key's defaults are used.</li>
+        <li>Total addresses across the three fields is capped at 50.</li>
+        <li>If the key does not have the override enabled, requests carrying recipients are rejected with <code>400 invalid_recipients</code>.</li>
+    </ul>
+</section>
+
+<section>
+    <h2>Responses</h2>
+    <table>
+        <thead><tr><th>Status</th><th>Meaning</th><th>Body</th></tr></thead>
+        <tbody>
+            <tr><td><code>202</code></td><td>Queued</td><td><code>{"message_id":"…","status":"queued"}</code></td></tr>
+            <tr><td><code>400</code></td><td>Invalid JSON or missing subject/body</td><td><code>{"error":"invalid_json","message":"…"}</code></td></tr>
+            <tr><td><code>401</code></td><td>Missing or invalid <code>Authorization</code></td><td><code>{"error":"missing or malformed Authorization header"}</code></td></tr>
+            <tr><td><code>422</code></td><td>Key has no recipients configured</td><td><code>{"error":"no_recipients", …}</code></td></tr>
+            <tr><td><code>429</code></td><td>Rate limit hit. Honor <code>Retry-After</code>.</td><td><code>{"error":"rate_limited", …}</code></td></tr>
+        </tbody>
+    </table>
+    <p class="muted">
+        202 means <em>accepted into the queue</em>, not delivered. Watch
+        <a href="/admin/messages">Messages</a> for the actual outcome.
+    </p>
+</section>
+
+<section>
+    <h2>curl</h2>
+    <pre class="body">curl -X POST {{.BaseURL}}/api/v1/send \
+  -H "Authorization: Bearer bf_YOUR_KEY_HERE" \
+  -H "Content-Type: application/json" \
+  -d '{"subject":"Welcome","body":"Hi there."}'</pre>
+</section>
+
+<section>
+    <h2>Go (stdlib)</h2>
+    <pre class="body">package mailer
+
+import (
+    "bytes"
+    "encoding/json"
+    "fmt"
+    "net/http"
+)
+
+const endpoint = "{{.BaseURL}}/api/v1/send"
+
+func Send(apiKey string, payload map[string]any) error {
+    body, _ := json.Marshal(payload)
+    req, _ := http.NewRequest("POST", endpoint, bytes.NewReader(body))
+    req.Header.Set("Authorization", "Bearer "+apiKey) // bf_YOUR_KEY_HERE
+    req.Header.Set("Content-Type", "application/json")
+    resp, err := http.DefaultClient.Do(req)
+    if err != nil {
+        return err
+    }
+    defer resp.Body.Close()
+    if resp.StatusCode != http.StatusAccepted {
+        return fmt.Errorf("bifrost: %s", resp.Status)
+    }
+    return nil
+}</pre>
+</section>
+
+<section>
+    <h2>Node (fetch)</h2>
+    <pre class="body">await fetch("{{.BaseURL}}/api/v1/send", {
+  method: "POST",
+  headers: {
+    "Authorization": `Bearer ${process.env.BIFROST_API_KEY}`, // bf_YOUR_KEY_HERE
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    template_name: "welcome",
+    variables: { name: "Alex" },
+  }),
+});</pre>
+</section>
+
+<section>
+    <h2>Python (requests)</h2>
+    <pre class="body">import os, requests
+
+requests.post(
+    "{{.BaseURL}}/api/v1/send",
+    headers={
+        "Authorization": f"Bearer {os.environ['BIFROST_API_KEY']}",  # bf_YOUR_KEY_HERE
+        "Content-Type": "application/json",
+    },
+    json={"subject": "Welcome", "body": "Hi there."},
+).raise_for_status()</pre>
+</section>
+
+<section>
+    <h2>Operational tips</h2>
+    <ul>
+        <li>Read the API key from an environment variable or secret manager — never hardcode it.</li>
+        <li>Treat <code>429</code> as backoff signal; the <code>Retry-After</code> header tells you how long to wait.</li>
+        <li>Treat <code>5xx</code> as transient; retry with your own backoff. Bifrost is queue-backed so duplicate enqueue from your client is the main risk — make your handler idempotent or de-dupe by your own message key.</li>
+        <li>The <code>message_id</code> returned in the 202 body is queryable on the <a href="/admin/messages">Messages</a> page.</li>
+    </ul>
+</section>
+{{end}}

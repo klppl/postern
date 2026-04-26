@@ -1,0 +1,108 @@
+{{define "content"}}
+<p><a href="/admin/keys">← API keys</a></p>
+<h1>{{if .Key.ID}}{{.Key.Name}}{{else}}New API key{{end}}</h1>
+
+{{if .NewRawKey}}
+<div class="reveal">
+    <strong>Save this key now — it will not be shown again:</strong>
+    <code class="raw-key">{{.NewRawKey}}</code>
+    <details>
+        <summary>Quick test (curl)</summary>
+        <pre class="body">curl -X POST {{.BaseURL}}/api/v1/send \
+  -H "Authorization: Bearer {{.NewRawKey}}" \
+  -H "Content-Type: application/json" \
+  -d '{"subject":"Test from Bifrost","body":"Hello!"}'</pre>
+        <p class="muted">See <a href="/admin/sending">Sending</a> for Go, Node, and Python examples.</p>
+    </details>
+</div>
+{{end}}
+
+<form method="post" action="{{if .Key.ID}}/admin/keys/{{.Key.ID}}{{else}}/admin/keys{{end}}">
+    <label>
+        Name
+        <input type="text" name="name" value="{{.Key.Name}}" required>
+    </label>
+    <fieldset>
+        <legend>Sender</legend>
+        <label>
+            From address
+            <input type="email" name="from_address" value="{{.Key.FromAddress}}" required>
+        </label>
+        <label>
+            From name (optional)
+            <input type="text" name="from_name" value="{{.Key.FromName}}">
+        </label>
+    </fieldset>
+    <fieldset>
+        <legend>Default recipients (one per line)</legend>
+        <p class="muted">
+            Used when the API request does not supply its own recipients.
+            Required unless the request-supplied recipients option below is enabled.
+        </p>
+        <label>
+            To
+            <textarea name="to_addresses" rows="3">{{join "\n" .Key.ToAddresses}}</textarea>
+        </label>
+        <label>
+            Cc
+            <textarea name="cc_addresses" rows="2">{{join "\n" .Key.CcAddresses}}</textarea>
+        </label>
+        <label>
+            Bcc
+            <textarea name="bcc_addresses" rows="2">{{join "\n" .Key.BccAddresses}}</textarea>
+        </label>
+        <label class="check">
+            <input type="checkbox" name="allow_request_recipients" {{if .Key.AllowRequestRecipients}}checked{{end}}>
+            Allow the API request to override recipients
+        </label>
+        <p class="muted">
+            When enabled, a request body containing <code>to</code>, <code>cc</code>, or
+            <code>bcc</code> replaces the defaults above for that one send.
+            Capped at 50 recipients across all three. If the request omits
+            recipients entirely, the defaults are still used.
+        </p>
+    </fieldset>
+    <fieldset>
+        <legend>Rate limits (0 = unlimited)</legend>
+        <div class="row">
+            <label>Per minute<input type="number" name="rate_per_minute" value="{{.Key.RatePerMinute}}" min="0"></label>
+            <label>Per hour<input type="number" name="rate_per_hour" value="{{.Key.RatePerHour}}" min="0"></label>
+            <label>Per day<input type="number" name="rate_per_day" value="{{.Key.RatePerDay}}" min="0"></label>
+        </div>
+    </fieldset>
+    {{if .Templates}}
+    <fieldset>
+        <legend>Allowed restricted templates</legend>
+        <p class="muted">Public templates are usable by any key. Restricted templates are only usable if checked here.</p>
+        {{range .Templates}}
+            {{if .Restricted}}
+            <label class="check">
+                <input type="checkbox" name="allowed_template_ids" value="{{.ID}}" {{if hasItem $.AllowedIDs .ID}}checked{{end}}>
+                {{.Name}}
+            </label>
+            {{end}}
+        {{end}}
+    </fieldset>
+    {{end}}
+    <label class="check">
+        <input type="checkbox" name="disabled" {{if .Key.Disabled}}checked{{end}}>
+        Disabled (rejects all requests)
+    </label>
+    <div class="actions">
+        <button type="submit" class="primary">{{if .Key.ID}}Save{{else}}Create{{end}}</button>
+        {{if .Key.ID}}<a href="/admin/keys" class="muted">Cancel</a>{{end}}
+    </div>
+</form>
+
+{{if .Key.ID}}
+<section class="danger">
+    <h2>Manage</h2>
+    <form method="post" action="/admin/keys/{{.Key.ID}}/rotate" onsubmit="return confirm('Rotate this key? The old value will stop working immediately.')">
+        <button type="submit">Rotate key</button>
+    </form>
+    <form method="post" action="/admin/keys/{{.Key.ID}}/delete" onsubmit="return confirm('Delete this key permanently?')">
+        <button type="submit" class="destructive">Delete</button>
+    </form>
+</section>
+{{end}}
+{{end}}

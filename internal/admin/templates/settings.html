@@ -1,0 +1,19 @@
+{{define "content"}}
+<h1>Settings</h1>
+<form method="post" action="/admin/settings">
+    <fieldset>
+        <legend>Retention</legend>
+        <label>
+            Keep messages for this many days (0 = forever)
+            <input type="number" name="retention_days" value="{{.RetentionDays}}" min="0">
+        </label>
+    </fieldset>
+    <fieldset>
+        <legend>Admin password</legend>
+        <p class="muted">Signed in as <strong>{{.AdminUsername}}</strong>. Changing the password ends all active sessions.</p>
+        <label>New password<input type="password" name="new_password" autocomplete="new-password"></label>
+        <label>Confirm<input type="password" name="new_password_confirm" autocomplete="new-password"></label>
+    </fieldset>
+    <div class="actions"><button type="submit" class="primary">Save</button></div>
+</form>
+{{end}}

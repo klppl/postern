@@ -1,0 +1,50 @@
+{{define "content"}}
+<p><a href="/admin/templates">← Templates</a></p>
+<h1>{{if .Template.ID}}{{.Template.Name}}{{else}}New template{{end}}</h1>
+
+<form method="post" action="{{if .Template.ID}}/admin/templates/{{.Template.ID}}{{else}}/admin/templates{{end}}">
+    <label>
+        Name
+        <input type="text" name="name" value="{{.Template.Name}}" required>
+    </label>
+    <label>
+        Subject
+        <input type="text" name="subject" value="{{.Template.Subject}}">
+    </label>
+    <label>
+        Plain text body
+        <textarea name="body_text" rows="10" id="body_text">{{.Template.BodyText}}</textarea>
+    </label>
+    <label>
+        HTML body
+        <textarea name="body_html" rows="10" id="body_html">{{.Template.BodyHTML}}</textarea>
+    </label>
+    <label class="check">
+        <input type="checkbox" name="restricted" {{if .Template.Restricted}}checked{{end}}>
+        Restricted (only usable by API keys with explicit access)
+    </label>
+    <div class="actions">
+        <button type="submit" class="primary">{{if .Template.ID}}Save{{else}}Create{{end}}</button>
+    </div>
+</form>
+
+<section>
+    <h2>Preview</h2>
+    <form data-preview="preview-result">
+        <label>
+            Variables (JSON)
+            <textarea name="variables" rows="4" placeholder='{"name": "Alex"}'></textarea>
+        </label>
+        <button type="submit">Render preview</button>
+    </form>
+    <div id="preview-result"></div>
+</section>
+
+{{if .Template.ID}}
+<section class="danger">
+    <form method="post" action="/admin/templates/{{.Template.ID}}/delete" onsubmit="return confirm('Delete this template?')">
+        <button type="submit" class="destructive">Delete</button>
+    </form>
+</section>
+{{end}}
+{{end}}

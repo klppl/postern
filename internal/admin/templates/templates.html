@@ -1,0 +1,25 @@
+{{define "content"}}
+<div class="page-header">
+    <h1>Templates</h1>
+    <a href="/admin/templates/new" class="primary">New template</a>
+</div>
+
+{{if .Templates}}
+<table>
+    <thead><tr><th>Name</th><th>Subject</th><th>Type</th><th>Updated</th><th></th></tr></thead>
+    <tbody>
+    {{range .Templates}}
+        <tr>
+            <td><a href="/admin/templates/{{.ID}}">{{.Name}}</a></td>
+            <td>{{.Subject}}</td>
+            <td>{{if .Restricted}}restricted{{else}}public{{end}}</td>
+            <td>{{.UpdatedAt.Format "2006-01-02"}}</td>
+            <td><a href="/admin/templates/{{.ID}}">Edit</a></td>
+        </tr>
+    {{end}}
+    </tbody>
+</table>
+{{else}}
+<p class="muted">No templates yet.</p>
+{{end}}
+{{end}}

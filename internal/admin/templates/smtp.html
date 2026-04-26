@@ -1,0 +1,30 @@
+{{define "content"}}
+<h1>SMTP</h1>
+<form method="post" action="/admin/smtp">
+    <label>Host<input type="text" name="host" value="{{.Host}}" placeholder="smtp.mxroute.com" required></label>
+    <label>Port<input type="number" name="port" value="{{.Port}}" min="1" max="65535" required></label>
+    <label>Username<input type="text" name="username" value="{{.Username}}"></label>
+    <label>
+        Password
+        <input type="password" name="password" placeholder="{{if .HasPassword}}(saved — leave blank to keep){{else}}required for authenticated SMTP{{end}}">
+    </label>
+    <label>
+        TLS mode
+        <select name="tls_mode">
+            <option value="starttls" {{if eq .TLSMode "starttls"}}selected{{end}}>STARTTLS (port 587)</option>
+            <option value="tls" {{if eq .TLSMode "tls"}}selected{{end}}>Implicit TLS (port 465)</option>
+            <option value="none" {{if eq .TLSMode "none"}}selected{{end}}>None (insecure)</option>
+        </select>
+    </label>
+    <div class="actions"><button type="submit" class="primary">Save</button></div>
+</form>
+
+<section>
+    <h2>Send test message</h2>
+    <form method="post" action="/admin/smtp/test">
+        <label>From address (must be allowed by your SMTP account)<input type="email" name="test_from" required></label>
+        <label>To address<input type="email" name="test_recipient" required></label>
+        <button type="submit">Send test</button>
+    </form>
+</section>
+{{end}}

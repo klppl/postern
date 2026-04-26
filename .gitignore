@@ -1,0 +1,7 @@
+/bifrost
+/bifrost.exe
+*.db
+*.db-shm
+*.db-wal
+.env
+/data/
