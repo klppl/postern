@@ -18,6 +18,7 @@ type flashPayload struct {
 
 type flashCodec struct {
 	cipher *crypto.Cipher
+	secure bool
 }
 
 func (f *flashCodec) write(w http.ResponseWriter, kind, message string) {
@@ -31,6 +32,7 @@ func (f *flashCodec) write(w http.ResponseWriter, kind, message string) {
 		Value:    f.cipher.Sign(raw),
 		Path:     "/admin",
 		HttpOnly: true,
+		Secure:   f.secure,
 		SameSite: http.SameSiteLaxMode,
 	})
 }

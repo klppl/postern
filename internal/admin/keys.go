@@ -10,6 +10,15 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+// Default rate limits pre-filled into the new-key form. A key created without
+// touching these fields gets a bounded send rate instead of unlimited; an
+// operator who genuinely wants no cap can still set a field to 0.
+const (
+	defaultRatePerMinute = 60
+	defaultRatePerHour   = 1000
+	defaultRatePerDay    = 10000
+)
+
 type keyListData struct {
 	Keys []*store.APIKey
 }
@@ -39,7 +48,11 @@ func (s *Server) newKey(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.render(w, r, "apikey_form.html", "New API key", "keys", keyFormData{
-		Key:       &store.APIKey{},
+		Key: &store.APIKey{
+			RatePerMinute: defaultRatePerMinute,
+			RatePerHour:   defaultRatePerHour,
+			RatePerDay:    defaultRatePerDay,
+		},
 		Templates: tmpls,
 	})
 }
@@ -75,7 +88,7 @@ func (s *Server) createKey(w http.ResponseWriter, r *http.Request) {
 	s.render(w, r, "apikey_form.html", "API key created", "keys", keyFormData{
 		Key:        k,
 		NewRawKey:  raw,
-		BaseURL:    deriveBaseURL(r),
+		BaseURL:    s.deriveBaseURL(r),
 		Templates:  tmpls,
 		AllowedIDs: allowed,
 	})
@@ -148,7 +161,7 @@ func (s *Server) rotateKey(w http.ResponseWriter, r *http.Request) {
 	tmpls, _ := s.store.ListTemplates(r.Context())
 	allowed, _ := s.store.AllowedTemplateIDs(r.Context(), id)
 	s.render(w, r, "apikey_form.html", "API key rotated", "keys", keyFormData{
-		Key: k, NewRawKey: raw, BaseURL: deriveBaseURL(r), Templates: tmpls, AllowedIDs: allowed,
+		Key: k, NewRawKey: raw, BaseURL: s.deriveBaseURL(r), Templates: tmpls, AllowedIDs: allowed,
 	})
 }
 

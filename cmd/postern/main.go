@@ -78,7 +78,12 @@ func run() error {
 
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
-	r.Use(middleware.RealIP)
+	// Only honor client-supplied X-Forwarded-For / X-Real-IP when we're
+	// explicitly told we sit behind a trusted proxy. Otherwise these headers
+	// are attacker-controlled and would poison audit logs.
+	if cfg.TrustProxy {
+		r.Use(middleware.RealIP)
+	}
 	r.Use(slogMiddleware(log))
 	r.Use(middleware.Recoverer)
 
@@ -86,8 +91,13 @@ func run() error {
 	r.Route("/api/v1", func(sub chi.Router) { apiSrv.Mount(sub) })
 
 	useTLS := cfg.TLSCert != "" && cfg.TLSKey != ""
-	sessions := auth.NewSessionManager(cipher, st, useTLS)
-	adminSrv, err := admin.NewServer(st, cipher, sessions, log)
+	// Mark cookies Secure when the app terminates TLS itself, or when the
+	// operator declares TLS is terminated upstream (reverse proxy). Without
+	// this, a proxy-terminated deployment would ship session cookies without
+	// the Secure attribute.
+	secureCookies := useTLS || cfg.SecureCookies
+	sessions := auth.NewSessionManager(cipher, st, secureCookies)
+	adminSrv, err := admin.NewServer(st, cipher, sessions, log, secureCookies, cfg.TrustProxy)
 	if err != nil {
 		return fmt.Errorf("init admin: %w", err)
 	}

@@ -25,6 +25,7 @@ type Config struct {
 	ShutdownGrace  time.Duration
 	WorkerInterval time.Duration
 	TrustProxy     bool
+	SecureCookies  bool
 }
 
 func FromEnv() (*Config, error) {
@@ -39,6 +40,7 @@ func FromEnv() (*Config, error) {
 		ShutdownGrace:  getDuration("POSTERN_SHUTDOWN_GRACE", 30*time.Second),
 		WorkerInterval: getDuration("POSTERN_WORKER_INTERVAL", 1*time.Second),
 		TrustProxy:     getBool("POSTERN_TRUST_PROXY", false),
+		SecureCookies:  getBool("POSTERN_SECURE_COOKIES", false),
 	}
 
 	rawKey := os.Getenv("POSTERN_MASTER_KEY")

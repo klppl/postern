@@ -78,26 +78,30 @@ func hasItem(haystack []int64, needle int64) bool {
 }
 
 type Server struct {
-	store    *store.Store
-	cipher   *crypto.Cipher
-	sessions *auth.SessionManager
-	tmpls    *templateSet
-	log      *slog.Logger
-	flash    *flashCodec
+	store      *store.Store
+	cipher     *crypto.Cipher
+	sessions   *auth.SessionManager
+	tmpls      *templateSet
+	log        *slog.Logger
+	flash      *flashCodec
+	logins     *loginThrottle
+	trustProxy bool
 }
 
-func NewServer(s *store.Store, c *crypto.Cipher, sm *auth.SessionManager, log *slog.Logger) (*Server, error) {
+func NewServer(s *store.Store, c *crypto.Cipher, sm *auth.SessionManager, log *slog.Logger, secure, trustProxy bool) (*Server, error) {
 	t, err := loadTemplates()
 	if err != nil {
 		return nil, err
 	}
 	return &Server{
-		store:    s,
-		cipher:   c,
-		sessions: sm,
-		tmpls:    t,
-		log:      log.With("component", "admin"),
-		flash:    &flashCodec{cipher: c},
+		store:      s,
+		cipher:     c,
+		sessions:   sm,
+		tmpls:      t,
+		log:        log.With("component", "admin"),
+		flash:      &flashCodec{cipher: c, secure: secure},
+		logins:     newLoginThrottle(),
+		trustProxy: trustProxy,
 	}, nil
 }
 
