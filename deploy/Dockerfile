@@ -15,10 +15,16 @@ COPY . .
 ENV CGO_ENABLED=0 GOOS=linux
 RUN go build -trimpath -ldflags="-s -w" -o /out/postern ./cmd/postern
 
+# Pre-create the data dir owned by distroless's nonroot uid so named volumes
+# inherit writable ownership (distroless has no shell to mkdir/chown at run
+# time).
+RUN mkdir /out/data && chown 65532:65532 /out/data
+
 FROM gcr.io/distroless/static-debian12:nonroot
 WORKDIR /app
 USER nonroot:nonroot
 COPY --from=build /out/postern /app/postern
+COPY --from=build --chown=65532:65532 /out/data /data
 
 # Document defaults; the operator overrides via -e at run time.
 ENV POSTERN_LISTEN_ADDR=:8080 \
