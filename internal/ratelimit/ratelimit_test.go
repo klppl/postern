@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/alexander/bifrost/internal/store"
+	"github.com/alexander/postern/internal/store"
 )
 
 func newTestStore(t *testing.T) *store.Store {
@@ -23,7 +23,7 @@ func newTestStore(t *testing.T) *store.Store {
 func newKey(t *testing.T, s *store.Store, perMin, perHour, perDay int) *store.APIKey {
 	t.Helper()
 	k := &store.APIKey{
-		Name: "test", KeyHash: t.Name(), KeyPrefix: "bf_test",
+		Name: "test", KeyHash: t.Name(), KeyPrefix: "pn_test",
 		FromAddress: "x@example.com",
 		ToAddresses: []string{"y@example.com"},
 		RatePerMinute: perMin, RatePerHour: perHour, RatePerDay: perDay,

@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/alexander/bifrost/internal/crypto"
+	"github.com/alexander/postern/internal/crypto"
 )
 
-const flashCookie = "bifrost_flash"
+const flashCookie = "postern_flash"
 
 type flashPayload struct {
 	Message string `json:"m"`

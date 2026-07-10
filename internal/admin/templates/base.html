@@ -3,14 +3,14 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{.Title}} · Bifrost</title>
+    <title>{{.Title}} · Postern</title>
     <link rel="stylesheet" href="/admin/static/style.css">
     <script src="/admin/static/app.js" defer></script>
 </head>
 <body>
 {{if .AdminName}}
 <header class="topbar">
-    <div class="brand">Bifrost</div>
+    <div class="brand">Postern</div>
     <nav>
         <a href="/admin/" {{if eq .Active "dashboard"}}class="active"{{end}}>Dashboard</a>
         <a href="/admin/messages" {{if eq .Active "messages"}}class="active"{{end}}>Messages</a>

@@ -3,7 +3,7 @@ package admin
 import (
 	"net/http"
 
-	"github.com/alexander/bifrost/internal/auth"
+	"github.com/alexander/postern/internal/auth"
 )
 
 type loginData struct {

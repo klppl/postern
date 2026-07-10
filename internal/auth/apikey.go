@@ -8,16 +8,16 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/alexander/bifrost/internal/crypto"
-	"github.com/alexander/bifrost/internal/store"
+	"github.com/alexander/postern/internal/crypto"
+	"github.com/alexander/postern/internal/store"
 )
 
 // rawKeyPrefix is the fixed prefix of every issued raw API key. Makes them
 // trivially recognizable in logs and code.
-const rawKeyPrefix = "bf_"
+const rawKeyPrefix = "pn_"
 
 // IssueAPIKey returns (rawKey, hash, displayPrefix) for a new key.
-// Raw key is bf_<32 random url-safe bytes>; only displayed at creation time.
+// Raw key is pn_<32 random url-safe bytes>; only displayed at creation time.
 func IssueAPIKey() (raw, hash, prefix string, err error) {
 	tok, err := crypto.RandomToken(32)
 	if err != nil {
@@ -87,7 +87,7 @@ func bearerToken(r *http.Request) (string, bool) {
 }
 
 func writeAuthError(w http.ResponseWriter, msg string) {
-	w.Header().Set("WWW-Authenticate", `Bearer realm="bifrost"`)
+	w.Header().Set("WWW-Authenticate", `Bearer realm="postern"`)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusUnauthorized)
 	w.Write([]byte(`{"error":"` + msg + `"}`))

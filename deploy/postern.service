@@ -1,27 +1,27 @@
 [Unit]
-Description=Bifrost email gateway
-Documentation=https://github.com/alexander/bifrost
+Description=Postern email gateway
+Documentation=https://github.com/alexander/postern
 After=network-online.target
 Wants=network-online.target
 
 [Service]
 Type=simple
-User=bifrost
-Group=bifrost
+User=postern
+Group=postern
 
 # Where the binary lives on the host. Adjust if you install elsewhere.
-ExecStart=/usr/local/bin/bifrost
+ExecStart=/usr/local/bin/postern
 
-# Persistent state. systemd creates /var/lib/bifrost owned by the service user.
-StateDirectory=bifrost
-WorkingDirectory=/var/lib/bifrost
+# Persistent state. systemd creates /var/lib/postern owned by the service user.
+StateDirectory=postern
+WorkingDirectory=/var/lib/postern
 
 # Required: 32-byte master key (hex or base64). KEEP THIS BACKED UP — losing
 # it means any encrypted SMTP password in the DB becomes unrecoverable.
-EnvironmentFile=/etc/bifrost/bifrost.env
+EnvironmentFile=/etc/postern/postern.env
 
-Environment=BIFROST_DB_PATH=/var/lib/bifrost/bifrost.db
-Environment=BIFROST_LISTEN_ADDR=127.0.0.1:8080
+Environment=POSTERN_DB_PATH=/var/lib/postern/postern.db
+Environment=POSTERN_LISTEN_ADDR=127.0.0.1:8080
 
 Restart=on-failure
 RestartSec=5s
@@ -41,7 +41,7 @@ RestrictRealtime=true
 RestrictSUIDSGID=true
 SystemCallArchitectures=native
 SystemCallFilter=@system-service
-ReadWritePaths=/var/lib/bifrost
+ReadWritePaths=/var/lib/postern
 CapabilityBoundingSet=
 AmbientCapabilities=
 

@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/alexander/bifrost/internal/mailer"
+	"github.com/alexander/postern/internal/mailer"
 )
 
 type smtpData struct {
@@ -135,8 +135,8 @@ func (s *Server) testSMTP(w http.ResponseWriter, r *http.Request) {
 	_, err = mailer.Send(ctx, cfg, &mailer.Message{
 		From:     from,
 		To:       []string{to},
-		Subject:  "Bifrost SMTP test",
-		BodyText: "This is a test message from Bifrost. If you got it, SMTP is configured correctly.",
+		Subject:  "Postern SMTP test",
+		BodyText: "This is a test message from Postern. If you got it, SMTP is configured correctly.",
 	})
 	if err != nil {
 		s.flashError(w, "Test failed: "+err.Error())

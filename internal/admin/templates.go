@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/alexander/bifrost/internal/store"
-	"github.com/alexander/bifrost/internal/templates"
+	"github.com/alexander/postern/internal/store"
+	"github.com/alexander/postern/internal/templates"
 	"github.com/go-chi/chi/v5"
 )
 

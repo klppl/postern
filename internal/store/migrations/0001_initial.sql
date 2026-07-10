@@ -1,4 +1,4 @@
--- Bifrost schema. Single migration for now; future changes go in 0002_*.sql etc.
+-- Postern schema. Single migration for now; future changes go in 0002_*.sql etc.
 
 CREATE TABLE admins (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,

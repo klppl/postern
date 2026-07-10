@@ -1,4 +1,4 @@
-module github.com/alexander/bifrost
+module github.com/alexander/postern
 
 go 1.22
 

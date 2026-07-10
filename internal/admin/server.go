@@ -8,9 +8,9 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/alexander/bifrost/internal/auth"
-	"github.com/alexander/bifrost/internal/crypto"
-	"github.com/alexander/bifrost/internal/store"
+	"github.com/alexander/postern/internal/auth"
+	"github.com/alexander/postern/internal/crypto"
+	"github.com/alexander/postern/internal/store"
 	"github.com/go-chi/chi/v5"
 )
 

@@ -5,10 +5,10 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/alexander/bifrost/internal/auth"
-	"github.com/alexander/bifrost/internal/queue"
-	"github.com/alexander/bifrost/internal/ratelimit"
-	"github.com/alexander/bifrost/internal/store"
+	"github.com/alexander/postern/internal/auth"
+	"github.com/alexander/postern/internal/queue"
+	"github.com/alexander/postern/internal/ratelimit"
+	"github.com/alexander/postern/internal/store"
 	"github.com/go-chi/chi/v5"
 )
 

@@ -7,13 +7,13 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/alexander/bifrost/internal/crypto"
-	"github.com/alexander/bifrost/internal/store"
+	"github.com/alexander/postern/internal/crypto"
+	"github.com/alexander/postern/internal/store"
 	"golang.org/x/crypto/bcrypt"
 )
 
 const (
-	sessionCookieName = "bifrost_session"
+	sessionCookieName = "postern_session"
 	sessionTTL        = 7 * 24 * time.Hour
 )
 

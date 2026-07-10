@@ -29,30 +29,30 @@ type Config struct {
 
 func FromEnv() (*Config, error) {
 	cfg := &Config{
-		ListenAddr:     getenv("BIFROST_LISTEN_ADDR", ":8080"),
-		DatabasePath:   getenv("BIFROST_DB_PATH", "bifrost.db"),
-		TLSCert:        os.Getenv("BIFROST_TLS_CERT"),
-		TLSKey:         os.Getenv("BIFROST_TLS_KEY"),
-		AdminUsername:  os.Getenv("BIFROST_ADMIN_USERNAME"),
-		AdminPassword:  os.Getenv("BIFROST_ADMIN_PASSWORD"),
-		BaseURL:        getenv("BIFROST_BASE_URL", ""),
-		ShutdownGrace:  getDuration("BIFROST_SHUTDOWN_GRACE", 30*time.Second),
-		WorkerInterval: getDuration("BIFROST_WORKER_INTERVAL", 1*time.Second),
-		TrustProxy:     getBool("BIFROST_TRUST_PROXY", false),
+		ListenAddr:     getenv("POSTERN_LISTEN_ADDR", ":8080"),
+		DatabasePath:   getenv("POSTERN_DB_PATH", "postern.db"),
+		TLSCert:        os.Getenv("POSTERN_TLS_CERT"),
+		TLSKey:         os.Getenv("POSTERN_TLS_KEY"),
+		AdminUsername:  os.Getenv("POSTERN_ADMIN_USERNAME"),
+		AdminPassword:  os.Getenv("POSTERN_ADMIN_PASSWORD"),
+		BaseURL:        getenv("POSTERN_BASE_URL", ""),
+		ShutdownGrace:  getDuration("POSTERN_SHUTDOWN_GRACE", 30*time.Second),
+		WorkerInterval: getDuration("POSTERN_WORKER_INTERVAL", 1*time.Second),
+		TrustProxy:     getBool("POSTERN_TRUST_PROXY", false),
 	}
 
-	rawKey := os.Getenv("BIFROST_MASTER_KEY")
+	rawKey := os.Getenv("POSTERN_MASTER_KEY")
 	if rawKey == "" {
-		return nil, errors.New("BIFROST_MASTER_KEY is required (32-byte hex or base64)")
+		return nil, errors.New("POSTERN_MASTER_KEY is required (32-byte hex or base64)")
 	}
 	key, err := decodeKey(rawKey)
 	if err != nil {
-		return nil, fmt.Errorf("BIFROST_MASTER_KEY: %w", err)
+		return nil, fmt.Errorf("POSTERN_MASTER_KEY: %w", err)
 	}
 	cfg.MasterKey = key
 
 	if (cfg.TLSCert == "") != (cfg.TLSKey == "") {
-		return nil, errors.New("BIFROST_TLS_CERT and BIFROST_TLS_KEY must both be set or both empty")
+		return nil, errors.New("POSTERN_TLS_CERT and POSTERN_TLS_KEY must both be set or both empty")
 	}
 
 	return cfg, nil

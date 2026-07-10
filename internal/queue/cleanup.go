@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/alexander/bifrost/internal/store"
+	"github.com/alexander/postern/internal/store"
 )
 
 // RetentionWorker deletes old outbox rows once a day. Retention is

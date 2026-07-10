@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/alexander/bifrost/internal/auth"
+	"github.com/alexander/postern/internal/auth"
 )
 
 type settingsData struct {

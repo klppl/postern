@@ -1,7 +1,7 @@
-# Bifrost
+# Postern
 
 A small self-hosted email gateway. Microservices POST to `/api/v1/send` over
-HTTP; Bifrost queues the message, renders any template, and forwards it
+HTTP; Postern queues the message, renders any template, and forwards it
 through your SMTP relay (e.g. MXroute). Per-key rate limiting, retry with
 exponential backoff, and a server-rendered admin UI.
 
@@ -11,12 +11,12 @@ you can cross-compile to a static binary that runs anywhere.
 ## Quick start
 
 ```bash
-go build -o bifrost ./cmd/bifrost
+go build -o postern ./cmd/postern
 
 cp .env.example .env
 # edit .env: paste a real master key (openssl rand -hex 32) and set admin creds
 
-./bifrost
+./postern
 ```
 
 Open `http://localhost:8080/admin/`, sign in, configure SMTP, create an API
@@ -24,8 +24,8 @@ key. The raw key is shown **once** at creation — copy it then.
 
 ### .env loading
 
-On startup Bifrost reads `.env` from the working directory if present.
-Override the path with `BIFROST_ENV_FILE=/path/to/file`. Variables already
+On startup Postern reads `.env` from the working directory if present.
+Override the path with `POSTERN_ENV_FILE=/path/to/file`. Variables already
 set in the shell environment **always win** over `.env`, matching the
 convention from `godotenv` / `docker-compose`. A missing file is fine.
 
@@ -38,15 +38,15 @@ unquoted values.
 ### `POST /api/v1/send`
 
 Pass the raw API key (the value shown to you once when the key was created,
-prefixed `bf_`) in the `Authorization` header. Replace
-`bf_YOUR_KEY_HERE` in every example below with that value.
+prefixed `pn_`) in the `Authorization` header. Replace
+`pn_YOUR_KEY_HERE` in every example below with that value.
 
 Inline content:
 
 ```http
 POST /api/v1/send HTTP/1.1
-Host: bifrost.example.com
-Authorization: Bearer bf_YOUR_KEY_HERE
+Host: postern.example.com
+Authorization: Bearer pn_YOUR_KEY_HERE
 Content-Type: application/json
 
 {
@@ -105,14 +105,14 @@ status via the admin UI at `/admin/messages/`.
 
 ### Examples
 
-In each snippet, replace `bf_YOUR_KEY_HERE` with the raw API key and
-`https://bifrost.example.com` with your Bifrost host.
+In each snippet, replace `pn_YOUR_KEY_HERE` with the raw API key and
+`https://postern.example.com` with your Postern host.
 
 **curl**
 
 ```bash
-curl -X POST https://bifrost.example.com/api/v1/send \
-  -H "Authorization: Bearer bf_YOUR_KEY_HERE" \
+curl -X POST https://postern.example.com/api/v1/send \
+  -H "Authorization: Bearer pn_YOUR_KEY_HERE" \
   -H "Content-Type: application/json" \
   -d '{"subject":"Welcome","body":"Hi there."}'
 ```
@@ -129,9 +129,9 @@ import (
 func sendEmail(apiKey string, payload map[string]any) error {
     body, _ := json.Marshal(payload)
     req, _ := http.NewRequest("POST",
-        "https://bifrost.example.com/api/v1/send",
+        "https://postern.example.com/api/v1/send",
         bytes.NewReader(body))
-    req.Header.Set("Authorization", "Bearer "+apiKey) // bf_YOUR_KEY_HERE
+    req.Header.Set("Authorization", "Bearer "+apiKey) // pn_YOUR_KEY_HERE
     req.Header.Set("Content-Type", "application/json")
     resp, err := http.DefaultClient.Do(req)
     if err != nil {
@@ -139,7 +139,7 @@ func sendEmail(apiKey string, payload map[string]any) error {
     }
     defer resp.Body.Close()
     if resp.StatusCode != http.StatusAccepted {
-        return fmt.Errorf("bifrost: %s", resp.Status)
+        return fmt.Errorf("postern: %s", resp.Status)
     }
     return nil
 }
@@ -148,10 +148,10 @@ func sendEmail(apiKey string, payload map[string]any) error {
 **Node (fetch)**
 
 ```js
-await fetch("https://bifrost.example.com/api/v1/send", {
+await fetch("https://postern.example.com/api/v1/send", {
   method: "POST",
   headers: {
-    "Authorization": `Bearer ${process.env.BIFROST_API_KEY}`, // bf_YOUR_KEY_HERE
+    "Authorization": `Bearer ${process.env.POSTERN_API_KEY}`, // pn_YOUR_KEY_HERE
     "Content-Type": "application/json",
   },
   body: JSON.stringify({
@@ -167,9 +167,9 @@ await fetch("https://bifrost.example.com/api/v1/send", {
 import os, requests
 
 requests.post(
-    "https://bifrost.example.com/api/v1/send",
+    "https://postern.example.com/api/v1/send",
     headers={
-        "Authorization": f"Bearer {os.environ['BIFROST_API_KEY']}",  # bf_YOUR_KEY_HERE
+        "Authorization": f"Bearer {os.environ['POSTERN_API_KEY']}",  # pn_YOUR_KEY_HERE
         "Content-Type": "application/json",
     },
     json={"subject": "Welcome", "body": "Hi there."},
@@ -186,15 +186,15 @@ Bootstrap and secrets come from environment variables. Operational settings
 
 | Variable                  | Required | Default              | Notes                                            |
 | ------------------------- | -------- | -------------------- | ------------------------------------------------ |
-| `BIFROST_MASTER_KEY`      | yes      | —                    | 32-byte hex (`openssl rand -hex 32`) or base64   |
-| `BIFROST_DB_PATH`         | no       | `bifrost.db`         | SQLite file path                                 |
-| `BIFROST_LISTEN_ADDR`     | no       | `:8080`              | `host:port`                                      |
-| `BIFROST_ADMIN_USERNAME`  | no       | —                    | Used only to bootstrap the first admin user      |
-| `BIFROST_ADMIN_PASSWORD`  | no       | —                    | Same                                             |
-| `BIFROST_TLS_CERT`        | no       | —                    | Path to TLS cert (set both or neither)           |
-| `BIFROST_TLS_KEY`         | no       | —                    | Path to TLS key                                  |
-| `BIFROST_WORKER_INTERVAL` | no       | `1s`                 | Outbox poll interval                             |
-| `BIFROST_SHUTDOWN_GRACE`  | no       | `30s`                | HTTP shutdown grace period                       |
+| `POSTERN_MASTER_KEY`      | yes      | —                    | 32-byte hex (`openssl rand -hex 32`) or base64   |
+| `POSTERN_DB_PATH`         | no       | `postern.db`         | SQLite file path                                 |
+| `POSTERN_LISTEN_ADDR`     | no       | `:8080`              | `host:port`                                      |
+| `POSTERN_ADMIN_USERNAME`  | no       | —                    | Used only to bootstrap the first admin user      |
+| `POSTERN_ADMIN_PASSWORD`  | no       | —                    | Same                                             |
+| `POSTERN_TLS_CERT`        | no       | —                    | Path to TLS cert (set both or neither)           |
+| `POSTERN_TLS_KEY`         | no       | —                    | Path to TLS key                                  |
+| `POSTERN_WORKER_INTERVAL` | no       | `1s`                 | Outbox poll interval                             |
+| `POSTERN_SHUTDOWN_GRACE`  | no       | `30s`                | HTTP shutdown grace period                       |
 
 ### Master key
 
@@ -210,7 +210,7 @@ unrecoverable; you'll need to re-enter it via the UI.
 
 ### Behind a reverse proxy (recommended)
 
-Bifrost listens in plain HTTP and expects a reverse proxy to terminate TLS.
+Postern listens in plain HTTP and expects a reverse proxy to terminate TLS.
 A Caddy block:
 
 ```
@@ -220,43 +220,43 @@ emails.example.com {
 ```
 
 For nginx, the equivalent `proxy_pass` to `127.0.0.1:8080` is sufficient.
-Set `BIFROST_LISTEN_ADDR=127.0.0.1:8080` so nothing on the public interface
-hears Bifrost directly.
+Set `POSTERN_LISTEN_ADDR=127.0.0.1:8080` so nothing on the public interface
+hears Postern directly.
 
 ### Built-in TLS
 
 If you'd rather skip the proxy:
 
 ```
-export BIFROST_TLS_CERT=/etc/bifrost/cert.pem
-export BIFROST_TLS_KEY=/etc/bifrost/key.pem
-export BIFROST_LISTEN_ADDR=:443
+export POSTERN_TLS_CERT=/etc/postern/cert.pem
+export POSTERN_TLS_KEY=/etc/postern/key.pem
+export POSTERN_LISTEN_ADDR=:443
 ```
 
 ### systemd
 
 ```bash
 sudo ./deploy/install.sh
-sudo $EDITOR /etc/bifrost/bifrost.env  # set admin credentials
-sudo systemctl start bifrost
-sudo journalctl -fu bifrost
+sudo $EDITOR /etc/postern/postern.env  # set admin credentials
+sudo systemctl start postern
+sudo journalctl -fu postern
 ```
 
-`install.sh` builds the binary, creates the `bifrost` user, generates a
-master key, and installs `deploy/bifrost.service` with a hardened
+`install.sh` builds the binary, creates the `postern` user, generates a
+master key, and installs `deploy/postern.service` with a hardened
 sandbox profile (read-only system, no new privileges, syscall filter, etc.).
 
 ### Docker
 
 ```bash
-docker build -f deploy/Dockerfile -t bifrost .
-docker run -d --name bifrost \
+docker build -f deploy/Dockerfile -t postern .
+docker run -d --name postern \
     -p 8080:8080 \
-    -v bifrost-data:/data \
-    -e BIFROST_MASTER_KEY=$(openssl rand -hex 32) \
-    -e BIFROST_ADMIN_USERNAME=admin \
-    -e BIFROST_ADMIN_PASSWORD=changeme \
-    bifrost
+    -v postern-data:/data \
+    -e POSTERN_MASTER_KEY=$(openssl rand -hex 32) \
+    -e POSTERN_ADMIN_USERNAME=admin \
+    -e POSTERN_ADMIN_PASSWORD=changeme \
+    postern
 ```
 
 Final image is `gcr.io/distroless/static-debian12:nonroot`, ~25 MB.
@@ -267,7 +267,7 @@ Final image is `gcr.io/distroless/static-debian12:nonroot`, ~25 MB.
 you own. After buying a slot:
 
 1. Add a mailbox on your domain in the MXroute panel.
-2. In Bifrost's **SMTP** page, fill in:
+2. In Postern's **SMTP** page, fill in:
    - **Host**: your server's outbound host (e.g. `mail.example.com` —
      check the panel; it's *not* the same as your customer-facing relay).
    - **Port**: `587`
@@ -307,7 +307,7 @@ Override the subject per-request by sending `subject` alongside
 
 ```bash
 go test ./...
-go build -trimpath -ldflags="-s -w" -o bifrost ./cmd/bifrost
+go build -trimpath -ldflags="-s -w" -o postern ./cmd/postern
 ```
 
 Requires Go 1.22+. No CGO. The binary embeds migrations, HTML templates, and
@@ -316,7 +316,7 @@ static assets — nothing external is read at runtime.
 ## Project layout
 
 ```
-cmd/bifrost/         entry point
+cmd/postern/         entry point
 internal/api/        /api/v1/* HTTP handlers
 internal/admin/      /admin/* HTTP handlers + HTML templates + CSS
 internal/auth/       API-key middleware + signed-cookie sessions

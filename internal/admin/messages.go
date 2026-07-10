@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/alexander/bifrost/internal/store"
+	"github.com/alexander/postern/internal/store"
 	"github.com/go-chi/chi/v5"
 )
 

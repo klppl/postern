@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/alexander/bifrost/internal/store"
+	"github.com/alexander/postern/internal/store"
 )
 
 type dashboardData struct {

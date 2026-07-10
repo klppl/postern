@@ -2,7 +2,7 @@
 <h1>Sending email from your application</h1>
 
 <p class="muted">
-    Replace <code>bf_YOUR_KEY_HERE</code> in every snippet below with the raw
+    Replace <code>pn_YOUR_KEY_HERE</code> in every snippet below with the raw
     API key. The raw key is shown once when you create or rotate a key on
     the <a href="/admin/keys">API keys</a> page — copy it then.
     Recipients and the From address are configured per-key, not per-request.
@@ -11,7 +11,7 @@
 <section>
     <h2>Endpoint</h2>
     <pre class="body">POST {{.BaseURL}}/api/v1/send
-Authorization: Bearer bf_YOUR_KEY_HERE
+Authorization: Bearer pn_YOUR_KEY_HERE
 Content-Type: application/json</pre>
 </section>
 
@@ -85,7 +85,7 @@ Content-Type: application/json</pre>
 <section>
     <h2>curl</h2>
     <pre class="body">curl -X POST {{.BaseURL}}/api/v1/send \
-  -H "Authorization: Bearer bf_YOUR_KEY_HERE" \
+  -H "Authorization: Bearer pn_YOUR_KEY_HERE" \
   -H "Content-Type: application/json" \
   -d '{"subject":"Welcome","body":"Hi there."}'</pre>
 </section>
@@ -106,7 +106,7 @@ const endpoint = "{{.BaseURL}}/api/v1/send"
 func Send(apiKey string, payload map[string]any) error {
     body, _ := json.Marshal(payload)
     req, _ := http.NewRequest("POST", endpoint, bytes.NewReader(body))
-    req.Header.Set("Authorization", "Bearer "+apiKey) // bf_YOUR_KEY_HERE
+    req.Header.Set("Authorization", "Bearer "+apiKey) // pn_YOUR_KEY_HERE
     req.Header.Set("Content-Type", "application/json")
     resp, err := http.DefaultClient.Do(req)
     if err != nil {
@@ -114,7 +114,7 @@ func Send(apiKey string, payload map[string]any) error {
     }
     defer resp.Body.Close()
     if resp.StatusCode != http.StatusAccepted {
-        return fmt.Errorf("bifrost: %s", resp.Status)
+        return fmt.Errorf("postern: %s", resp.Status)
     }
     return nil
 }</pre>
@@ -125,7 +125,7 @@ func Send(apiKey string, payload map[string]any) error {
     <pre class="body">await fetch("{{.BaseURL}}/api/v1/send", {
   method: "POST",
   headers: {
-    "Authorization": `Bearer ${process.env.BIFROST_API_KEY}`, // bf_YOUR_KEY_HERE
+    "Authorization": `Bearer ${process.env.POSTERN_API_KEY}`, // pn_YOUR_KEY_HERE
     "Content-Type": "application/json",
   },
   body: JSON.stringify({
@@ -142,7 +142,7 @@ func Send(apiKey string, payload map[string]any) error {
 requests.post(
     "{{.BaseURL}}/api/v1/send",
     headers={
-        "Authorization": f"Bearer {os.environ['BIFROST_API_KEY']}",  # bf_YOUR_KEY_HERE
+        "Authorization": f"Bearer {os.environ['POSTERN_API_KEY']}",  # pn_YOUR_KEY_HERE
         "Content-Type": "application/json",
     },
     json={"subject": "Welcome", "body": "Hi there."},
@@ -154,7 +154,7 @@ requests.post(
     <ul>
         <li>Read the API key from an environment variable or secret manager — never hardcode it.</li>
         <li>Treat <code>429</code> as backoff signal; the <code>Retry-After</code> header tells you how long to wait.</li>
-        <li>Treat <code>5xx</code> as transient; retry with your own backoff. Bifrost is queue-backed so duplicate enqueue from your client is the main risk — make your handler idempotent or de-dupe by your own message key.</li>
+        <li>Treat <code>5xx</code> as transient; retry with your own backoff. Postern is queue-backed so duplicate enqueue from your client is the main risk — make your handler idempotent or de-dupe by your own message key.</li>
         <li>The <code>message_id</code> returned in the 202 body is queryable on the <a href="/admin/messages">Messages</a> page.</li>
     </ul>
 </section>

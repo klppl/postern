@@ -9,9 +9,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/alexander/bifrost/internal/auth"
-	"github.com/alexander/bifrost/internal/store"
-	"github.com/alexander/bifrost/internal/templates"
+	"github.com/alexander/postern/internal/auth"
+	"github.com/alexander/postern/internal/store"
+	"github.com/alexander/postern/internal/templates"
 	"github.com/google/uuid"
 )
 
@@ -90,7 +90,7 @@ func (s *Server) handleSend(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	messageID := uuid.NewString() + "@bifrost.local"
+	messageID := uuid.NewString() + "@postern.local"
 	msg := &store.OutboxMessage{
 		MessageID:    messageID,
 		APIKeyID:     key.ID,

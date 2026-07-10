@@ -17,9 +17,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/alexander/bifrost/internal/crypto"
-	"github.com/alexander/bifrost/internal/mailer"
-	"github.com/alexander/bifrost/internal/store"
+	"github.com/alexander/postern/internal/crypto"
+	"github.com/alexander/postern/internal/mailer"
+	"github.com/alexander/postern/internal/store"
 )
 
 type Worker struct {

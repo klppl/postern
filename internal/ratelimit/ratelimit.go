@@ -12,7 +12,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/alexander/bifrost/internal/store"
+	"github.com/alexander/postern/internal/store"
 )
 
 type Limiter struct {

@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"net/http"
 
-	"github.com/alexander/bifrost/internal/auth"
+	"github.com/alexander/postern/internal/auth"
 )
 
 // pageData wraps per-request context that every template expects.

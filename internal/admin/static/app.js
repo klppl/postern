@@ -1,4 +1,4 @@
-// Bifrost — minimal client-side glue.
+// Postern — minimal client-side glue.
 // The only interactive feature is the template-preview form; everything
 // else is server-rendered HTML over POST/GET.
 

@@ -97,7 +97,7 @@ func Send(ctx context.Context, cfg Config, m *Message) (*Result, error) {
 	if m.MessageID != "" {
 		msg.SetMessageIDWithValue(m.MessageID)
 	}
-	msg.SetUserAgent(orDefault(m.UserAgent, "bifrost"))
+	msg.SetUserAgent(orDefault(m.UserAgent, "postern"))
 	msg.SetDate()
 
 	switch {

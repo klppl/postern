@@ -1,4 +1,4 @@
-// Bifrost — self-hosted email gateway.
+// Postern — self-hosted email gateway.
 package main
 
 import (
@@ -13,14 +13,14 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/alexander/bifrost/internal/admin"
-	"github.com/alexander/bifrost/internal/api"
-	"github.com/alexander/bifrost/internal/auth"
-	"github.com/alexander/bifrost/internal/config"
-	"github.com/alexander/bifrost/internal/crypto"
-	"github.com/alexander/bifrost/internal/queue"
-	"github.com/alexander/bifrost/internal/ratelimit"
-	"github.com/alexander/bifrost/internal/store"
+	"github.com/alexander/postern/internal/admin"
+	"github.com/alexander/postern/internal/api"
+	"github.com/alexander/postern/internal/auth"
+	"github.com/alexander/postern/internal/config"
+	"github.com/alexander/postern/internal/crypto"
+	"github.com/alexander/postern/internal/queue"
+	"github.com/alexander/postern/internal/ratelimit"
+	"github.com/alexander/postern/internal/store"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -28,13 +28,13 @@ import (
 
 func main() {
 	if err := run(); err != nil {
-		fmt.Fprintln(os.Stderr, "bifrost:", err)
+		fmt.Fprintln(os.Stderr, "postern:", err)
 		os.Exit(1)
 	}
 }
 
 func run() error {
-	envFile := os.Getenv("BIFROST_ENV_FILE")
+	envFile := os.Getenv("POSTERN_ENV_FILE")
 	if envFile == "" {
 		envFile = ".env"
 	}
@@ -155,7 +155,7 @@ func bootstrapAdmin(ctx context.Context, st *store.Store, cfg *config.Config, lo
 		return nil
 	}
 	if cfg.AdminUsername == "" || cfg.AdminPassword == "" {
-		log.Warn("no admins exist and BIFROST_ADMIN_USERNAME/PASSWORD not set — admin UI will be inaccessible")
+		log.Warn("no admins exist and POSTERN_ADMIN_USERNAME/PASSWORD not set — admin UI will be inaccessible")
 		return nil
 	}
 	hash, err := auth.HashPassword(cfg.AdminPassword)
