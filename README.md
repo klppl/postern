@@ -99,4 +99,4 @@ Requires Go 1.22+. No CGO.
 
 ## License
 
-MIT.
+[The Lagom License](LICENSE).
