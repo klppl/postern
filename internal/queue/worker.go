@@ -91,18 +91,12 @@ func (w *Worker) drain(ctx context.Context) {
 	}
 }
 
-func (w *Worker) deliver(ctx context.Context, m *store.OutboxMessage) {
-	cfg, err := w.smtpConfig(ctx)
-	if err != nil {
-		// SMTP misconfigured: defer the retry by one minute and let the
-		// admin fix it. Don't mark dead — the message is fine.
-		w.log.Warn("smtp config", "err", err, "message_id", m.MessageID)
-		next := time.Now().Add(time.Minute)
-		_ = w.store.MarkRetry(ctx, m.ID, next, "", "smtp not configured")
-		return
-	}
+// errNotConfigured signals that no delivery provider is set up yet, so the
+// message should be deferred (not counted as a delivery failure).
+var errNotConfigured = errors.New("delivery not configured")
 
-	res, sendErr := mailer.Send(ctx, cfg, &mailer.Message{
+func (w *Worker) deliver(ctx context.Context, m *store.OutboxMessage) {
+	msg := &mailer.Message{
 		From:      m.FromAddress,
 		FromName:  m.FromName,
 		To:        m.ToAddresses,
@@ -112,7 +106,17 @@ func (w *Worker) deliver(ctx context.Context, m *store.OutboxMessage) {
 		BodyText:  m.BodyText,
 		BodyHTML:  m.BodyHTML,
 		MessageID: m.MessageID,
-	})
+	}
+
+	res, sendErr := w.send(ctx, msg)
+	if errors.Is(sendErr, errNotConfigured) {
+		// Provider not configured: defer the retry by one minute and let the
+		// admin fix it. Don't mark dead — the message is fine.
+		w.log.Warn("delivery not configured", "message_id", m.MessageID)
+		next := time.Now().Add(time.Minute)
+		_ = w.store.MarkRetry(ctx, m.ID, next, "", "delivery not configured")
+		return
+	}
 	if sendErr == nil {
 		resp := ""
 		if res != nil {
@@ -155,22 +159,42 @@ func (w *Worker) deliver(ctx context.Context, m *store.OutboxMessage) {
 	_ = w.store.MarkRetry(ctx, m.ID, next, resp, errMsg)
 }
 
-func (w *Worker) smtpConfig(ctx context.Context) (mailer.Config, error) {
+// send picks the configured delivery provider and hands the message off. A
+// missing configuration surfaces as errNotConfigured so the caller can defer
+// rather than dead-letter.
+func (w *Worker) send(ctx context.Context, msg *mailer.Message) (*mailer.Result, error) {
 	settings, err := w.store.AllSettings(ctx)
 	if err != nil {
-		return mailer.Config{}, err
+		return nil, err
 	}
+	switch settings["delivery_mode"] {
+	case "mxroute_api":
+		cfg, err := w.mxrouteConfig(settings)
+		if err != nil {
+			return nil, err
+		}
+		return mailer.SendMXRoute(ctx, cfg, msg)
+	default:
+		cfg, err := w.smtpConfig(settings)
+		if err != nil {
+			return nil, err
+		}
+		return mailer.Send(ctx, cfg, msg)
+	}
+}
+
+func (w *Worker) smtpConfig(settings map[string]string) (mailer.Config, error) {
 	host := settings["smtp_host"]
 	if host == "" {
-		return mailer.Config{}, errors.New("smtp_host empty")
+		return mailer.Config{}, errNotConfigured
 	}
 	port, _ := strconv.Atoi(settings["smtp_port"])
 	if port == 0 {
 		port = 587
 	}
-	pwEnc := settings["smtp_password_enc"]
 	var pw []byte
-	if pwEnc != "" {
+	if pwEnc := settings["smtp_password_enc"]; pwEnc != "" {
+		var err error
 		pw, err = w.cipher.Decrypt(pwEnc)
 		if err != nil {
 			return mailer.Config{}, err
@@ -186,5 +210,25 @@ func (w *Worker) smtpConfig(ctx context.Context) (mailer.Config, error) {
 		Username: settings["smtp_username"],
 		Password: string(pw),
 		TLSMode:  tlsMode,
+	}, nil
+}
+
+func (w *Worker) mxrouteConfig(settings map[string]string) (mailer.MXRouteConfig, error) {
+	server := settings["mxroute_server"]
+	if server == "" {
+		return mailer.MXRouteConfig{}, errNotConfigured
+	}
+	var pw []byte
+	if pwEnc := settings["mxroute_password_enc"]; pwEnc != "" {
+		var err error
+		pw, err = w.cipher.Decrypt(pwEnc)
+		if err != nil {
+			return mailer.MXRouteConfig{}, err
+		}
+	}
+	return mailer.MXRouteConfig{
+		Server:   server,
+		Username: settings["mxroute_username"],
+		Password: string(pw),
 	}, nil
 }

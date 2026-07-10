@@ -1,28 +1,57 @@
 {{define "content"}}
-<h1>SMTP</h1>
+<h1>Delivery</h1>
 <form method="post" action="/admin/smtp">
-    <label>Host<input type="text" name="host" value="{{.Host}}" placeholder="smtp.mxroute.com" required></label>
-    <label>Port<input type="number" name="port" value="{{.Port}}" min="1" max="65535" required></label>
-    <label>Username<input type="text" name="username" value="{{.Username}}"></label>
     <label>
-        Password
-        <input type="password" name="password" placeholder="{{if .HasPassword}}(saved — leave blank to keep){{else}}required for authenticated SMTP{{end}}">
-    </label>
-    <label>
-        TLS mode
-        <select name="tls_mode">
-            <option value="starttls" {{if eq .TLSMode "starttls"}}selected{{end}}>STARTTLS (port 587)</option>
-            <option value="tls" {{if eq .TLSMode "tls"}}selected{{end}}>Implicit TLS (port 465)</option>
-            <option value="none" {{if eq .TLSMode "none"}}selected{{end}}>None (insecure)</option>
+        Provider
+        <select name="delivery_mode" id="delivery_mode">
+            <option value="smtp" {{if eq .DeliveryMode "smtp"}}selected{{end}}>Regular SMTP</option>
+            <option value="mxroute_api" {{if eq .DeliveryMode "mxroute_api"}}selected{{end}}>MXroute SMTP API (HTTP)</option>
         </select>
     </label>
+
+    <fieldset class="provider-group" data-provider="smtp">
+        <legend>SMTP</legend>
+        <label>Host<input type="text" name="host" value="{{.Host}}" placeholder="smtp.mxroute.com"></label>
+        <label>Port<input type="number" name="port" value="{{.Port}}" min="1" max="65535"></label>
+        <label>Username<input type="text" name="username" value="{{.Username}}"></label>
+        <label>
+            Password
+            <input type="password" name="password" placeholder="{{if .HasPassword}}(saved — leave blank to keep){{else}}required for authenticated SMTP{{end}}">
+        </label>
+        <label>
+            TLS mode
+            <select name="tls_mode">
+                <option value="starttls" {{if eq .TLSMode "starttls"}}selected{{end}}>STARTTLS (port 587)</option>
+                <option value="tls" {{if eq .TLSMode "tls"}}selected{{end}}>Implicit TLS (port 465)</option>
+                <option value="none" {{if eq .TLSMode "none"}}selected{{end}}>None (insecure)</option>
+            </select>
+        </label>
+    </fieldset>
+
+    <fieldset class="provider-group" data-provider="mxroute_api">
+        <legend>MXroute SMTP API</legend>
+        <p class="muted">
+            Delivers over HTTPS to <code>smtpapi.mxroute.com</code> using your MXroute
+            email credentials — handy where SMTP ports are blocked. The sender address
+            comes from each API key. One recipient per call (to/cc/bcc are sent as
+            separate requests); no attachments.
+        </p>
+        <label>Server<input type="text" name="mx_server" value="{{.MXServer}}" placeholder="tuesday.mxrouting.net"></label>
+        <label>Username<input type="text" name="mx_username" value="{{.MXUsername}}" placeholder="noreply@yourdomain.com"></label>
+        <label>
+            Password
+            <input type="password" name="mx_password" placeholder="{{if .MXHasPassword}}(saved — leave blank to keep){{else}}your MXroute email password{{end}}">
+        </label>
+    </fieldset>
+
     <div class="actions"><button type="submit" class="primary">Save</button></div>
 </form>
 
 <section>
     <h2>Send test message</h2>
+    <p class="muted">Uses the currently saved provider.</p>
     <form method="post" action="/admin/smtp/test">
-        <label>From address (must be allowed by your SMTP account)<input type="email" name="test_from" required></label>
+        <label>From address (must be an address you control)<input type="email" name="test_from" required></label>
         <label>To address<input type="email" name="test_recipient" required></label>
         <button type="submit">Send test</button>
     </form>

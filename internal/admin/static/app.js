@@ -35,5 +35,22 @@
         });
     }
 
-    document.addEventListener("DOMContentLoaded", setupPreview);
+    // Delivery settings: show only the field group for the selected provider.
+    function setupProviderToggle() {
+        var sel = document.getElementById("delivery_mode");
+        if (!sel) return;
+        var groups = document.querySelectorAll(".provider-group");
+        function apply() {
+            groups.forEach(function (g) {
+                g.style.display = (g.getAttribute("data-provider") === sel.value) ? "" : "none";
+            });
+        }
+        sel.addEventListener("change", apply);
+        apply();
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        setupPreview();
+        setupProviderToggle();
+    });
 })();

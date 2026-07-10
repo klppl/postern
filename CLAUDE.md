@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-Postern is a self-hosted email gateway: microservices POST to `/api/v1/send`, the message is queued in a SQLite outbox, and an in-process worker delivers it through a configured SMTP relay. Single Go binary, no CGO (`modernc.org/sqlite`), no external broker. Everything (migrations, admin HTML templates, static assets) is embedded via `go:embed` — nothing external is read at runtime except `.env` and the DB file.
+Postern is a self-hosted email gateway: microservices POST to `/api/v1/send`, the message is queued in a SQLite outbox, and an in-process worker delivers it through the configured provider — either a regular SMTP relay or MXroute's HTTP SMTP API (`smtpapi.mxroute.com`), selected in the admin UI (`delivery_mode` setting). Single Go binary, no CGO (`modernc.org/sqlite`), no external broker. Everything (migrations, admin HTML templates, static assets) is embedded via `go:embed` — nothing external is read at runtime except `.env` and the DB file.
 
 ## Commands
 
@@ -30,7 +30,7 @@ Key cross-cutting pieces:
 - **`internal/store`** — all persistence; typed query methods per entity file (`outbox.go`, `apikeys.go`, `settings.go`, …). Migrations are embedded `.sql` files in `store/migrations/`, applied in filename order and tracked in `schema_migrations`; add a new numbered file to change schema. The pool is deliberately capped at 1 connection (WAL mode) to avoid SQLite write-lock errors — don't "fix" this.
 - **`internal/crypto`** — one master key (env `POSTERN_MASTER_KEY`) drives both AES-256-GCM encryption of the SMTP password at rest and HMAC signing of session/flash cookies.
 - **API keys** — raw keys are `pn_`-prefixed, shown once at creation, stored only as a hash. Recipients (`to`/`cc`/`bcc`/`from`) are bound to the key by default; per-request recipients require the key's override flag and are all-or-nothing (no field merge), capped at 50. `from` is never overridable.
-- **SMTP config lives in the DB** (settings table, edited via admin UI), not env — the worker re-reads it on every send so rotation needs no restart. Env vars are only bootstrap/secrets (see `.env.example` for the full list).
+- **Delivery config lives in the DB** (settings table, edited via admin UI), not env — the worker re-reads it on every send so rotation/provider-switch needs no restart. `delivery_mode` picks `smtp` (host/port/username/`smtp_password_enc`/tls) or `mxroute_api` (`mxroute_server`/`mxroute_username`/`mxroute_password_enc`). `internal/mailer` has one file per provider (`mailer.go` SMTP via go-mail, `mxroute.go` HTTP API); both return the same transient/permanent `SendError` classification and `Result`. MXroute is one recipient per HTTP call, so multi-recipient messages fan out per recipient (at-least-once). Env vars are only bootstrap/secrets (see `.env.example` for the full list).
 - **`internal/ratelimit`** — fixed-window per-key limits (minute/hour/day buckets) stored in SQLite, so they survive restarts.
 - **Templates** (`internal/templates`) — Handlebars (`{{var}}`) via raymond; each template has subject/text/HTML variants. Templates are public or restricted to an allow-list per API key.
 - **Admin UI** — each page in `internal/admin/templates/*.html` is parsed together with `base.html`; adding a page means a handler + template + registration in `server.go`'s template set.
