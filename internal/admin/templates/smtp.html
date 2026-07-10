@@ -33,8 +33,8 @@
         <p class="muted">
             Delivers over HTTPS to <code>smtpapi.mxroute.com</code> using your MXroute
             email credentials — handy where SMTP ports are blocked. The sender address
-            comes from each API key. One recipient per call (to/cc/bcc are sent as
-            separate requests); no attachments.
+            comes from each API key. Single recipient per message (messages with more
+            than one to/cc/bcc address are rejected); no attachments.
         </p>
         <label>Server<input type="text" name="mx_server" value="{{.MXServer}}" placeholder="tuesday.mxrouting.net"></label>
         <label>Username<input type="text" name="mx_username" value="{{.MXUsername}}" placeholder="noreply@yourdomain.com"></label>

@@ -76,6 +76,16 @@ func (s *Server) handleSend(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// The MXroute HTTP API is single-recipient. Reject multi-recipient sends up
+	// front (clear 422) rather than letting them dead-letter at delivery time.
+	if total := len(to) + len(cc) + len(bcc); total > 1 {
+		if mode, _ := s.store.GetSetting(r.Context(), "delivery_mode"); mode == "mxroute_api" {
+			jsonError(w, http.StatusUnprocessableEntity, "too_many_recipients",
+				"the active delivery provider (MXroute API) accepts a single recipient per message; this request has "+strconv.Itoa(total))
+			return
+		}
+	}
+
 	subject, bodyText, bodyHTML, err := s.resolveContent(r, key, req)
 	if err != nil {
 		jsonError(w, http.StatusBadRequest, "invalid_content", err.Error())

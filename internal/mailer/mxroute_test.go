@@ -49,24 +49,40 @@ func TestSendMXRouteSuccess(t *testing.T) {
 	}
 }
 
-func TestSendMXRouteFansOutPerRecipient(t *testing.T) {
+func TestSendMXRoutePrefersHTMLBody(t *testing.T) {
 	srv, got := mxServer(t, func(mxRouteRequest) (int, mxRouteResponse) {
 		return 200, mxRouteResponse{Success: true, Message: "ok"}
 	})
 	cfg := MXRouteConfig{Server: "s", Endpoint: srv.URL}
 	_, err := SendMXRoute(context.Background(), cfg, &Message{
-		From: "u@d.com", To: []string{"a@x.com"}, Cc: []string{"b@x.com"}, Bcc: []string{"c@x.com"},
-		Subject: "hi", BodyHTML: "<b>hi</b>",
+		From: "u@d.com", To: []string{"a@x.com"}, Subject: "hi", BodyText: "plain", BodyHTML: "<b>hi</b>",
 	})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if len(*got) != 3 {
-		t.Fatalf("expected 3 requests (one per recipient), got %d", len(*got))
+	if len(*got) != 1 {
+		t.Fatalf("expected 1 request, got %d", len(*got))
 	}
-	// HTML body preferred over text.
 	if (*got)[0].Body != "<b>hi</b>" {
-		t.Fatalf("expected HTML body, got %q", (*got)[0].Body)
+		t.Fatalf("expected HTML body preferred, got %q", (*got)[0].Body)
+	}
+}
+
+func TestSendMXRouteRejectsMultipleRecipients(t *testing.T) {
+	srv, got := mxServer(t, func(mxRouteRequest) (int, mxRouteResponse) {
+		return 200, mxRouteResponse{Success: true, Message: "ok"}
+	})
+	cfg := MXRouteConfig{Server: "s", Endpoint: srv.URL}
+	_, err := SendMXRoute(context.Background(), cfg, &Message{
+		From: "u@d.com", To: []string{"a@x.com"}, Cc: []string{"b@x.com"},
+		Subject: "hi", BodyText: "yo",
+	})
+	var se *SendError
+	if !errors.As(err, &se) || !se.Permanent {
+		t.Fatalf("expected permanent SendError for multi-recipient, got %v", err)
+	}
+	if len(*got) != 0 {
+		t.Fatalf("expected no API requests to be made, got %d", len(*got))
 	}
 }
 

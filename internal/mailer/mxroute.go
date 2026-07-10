@@ -42,12 +42,10 @@ type mxRouteResponse struct {
 
 // SendMXRoute delivers a message through MXroute's HTTP API.
 //
-// The API accepts a single recipient per call and has no cc/bcc concept, so we
-// fan out one request per recipient across to+cc+bcc. Delivery is at-least-once:
-// if one request in a multi-recipient message fails, the whole message is
-// retried, which may re-deliver to recipients that already succeeded. For the
-// common single-recipient case each send is atomic. HTML in body is supported;
-// other fields are plain text.
+// The API accepts a single recipient per call and has no cc/bcc concept.
+// Multi-recipient messages are rejected outright (a permanent failure) rather
+// than fanned out, which would risk partial re-delivery on retry. HTML in body
+// is supported; other fields are plain text.
 func SendMXRoute(ctx context.Context, cfg MXRouteConfig, m *Message) (*Result, error) {
 	if cfg.Server == "" {
 		return nil, &SendError{Permanent: true, Err: errors.New("MXroute API not configured")}
@@ -69,32 +67,33 @@ func SendMXRoute(ctx context.Context, cfg MXRouteConfig, m *Message) (*Result, e
 	recipients = append(recipients, m.To...)
 	recipients = append(recipients, m.Cc...)
 	recipients = append(recipients, m.Bcc...)
-	if len(recipients) == 0 {
+	switch {
+	case len(recipients) == 0:
 		return nil, &SendError{Permanent: true, Err: errors.New("no recipients")}
+	case len(recipients) > 1:
+		return nil, &SendError{Permanent: true, Err: fmt.Errorf(
+			"MXroute API accepts a single recipient per message, got %d (to+cc+bcc)", len(recipients))}
+	}
+
+	reqBody, err := json.Marshal(mxRouteRequest{
+		Server:   cfg.Server,
+		Username: cfg.Username,
+		Password: cfg.Password,
+		From:     m.From,
+		To:       recipients[0],
+		Subject:  m.Subject,
+		Body:     body,
+	})
+	if err != nil {
+		return nil, &SendError{Permanent: true, Err: fmt.Errorf("encode request: %w", err)}
 	}
 
 	client := &http.Client{Timeout: 30 * time.Second}
-	var lastResp string
-	for _, rcpt := range recipients {
-		reqBody, err := json.Marshal(mxRouteRequest{
-			Server:   cfg.Server,
-			Username: cfg.Username,
-			Password: cfg.Password,
-			From:     m.From,
-			To:       rcpt,
-			Subject:  m.Subject,
-			Body:     body,
-		})
-		if err != nil {
-			return nil, &SendError{Permanent: true, Err: fmt.Errorf("encode request: %w", err)}
-		}
-		resp, sendErr := doMXRoute(ctx, client, endpoint, reqBody)
-		if sendErr != nil {
-			return &Result{Response: resp}, sendErr
-		}
-		lastResp = resp
+	resp, sendErr := doMXRoute(ctx, client, endpoint, reqBody)
+	if sendErr != nil {
+		return &Result{Response: resp}, sendErr
 	}
-	return &Result{Response: orDefault(lastResp, "200 OK")}, nil
+	return &Result{Response: orDefault(resp, "200 OK")}, nil
 }
 
 // doMXRoute issues one API request and classifies the outcome into the same
