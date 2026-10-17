@@ -1,5 +1,7 @@
 # Postern
 
+[![License: Lagom](https://img.shields.io/badge/license-lagom-9E2B25)](https://klppl.github.io/lagom-license/)
+
 Self-hosted email gateway. Your microservices POST to `/api/v1/send`; Postern
 queues the message in SQLite, renders any template, and delivers it through a
 provider — a standard SMTP relay or MXroute's HTTP SMTP API.
